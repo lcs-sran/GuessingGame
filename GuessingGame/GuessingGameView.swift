@@ -5,6 +5,8 @@
 //  WHAT THIS GAME DOES NOW
 //  The app picks a secret whole number from 1 to 100.
 //  You choose a guess with the buttons and click Guess.
+//  NEW FOR MAKE IT YOURS
+//  Wrong guesses now tell the player to go higher or lower.
 //  The app tells you if your guess is right or not right,
 //  and it counts your guesses. When you find the number,
 //  you can play again.
@@ -20,7 +22,7 @@ import SwiftUI
 // so that every part of the game below can use them.
 // TRY: Change highestNumber to 10 for an easy game, or to 1000 for a hard one.
 let lowestNumber: Int = 1
-let highestNumber: Int = 1000
+let highestNumber: Int = 100
 
 // The game itself: what it remembers, what it shows on the screen,
 // and what it does when you click a button.
@@ -151,17 +153,20 @@ struct GuessingGameView: View {
         // One more guess has been made.
         guessCount += 1
 
-        if guess == secretNumber {
-            message = "Yes! \(secretNumber) is my number."
-            messageSymbol = "xmark.circle.fill"
-            messageColor = Color.green
-            gameIsOver = true
-        } else {
-            // TRY: Change this message. Make it kinder, or sillier.
-            message = "\(guess) is not my number. Try again."
-            messageSymbol = "xmark.circle.fill"
-            messageColor = Color.orange
-        }
+            if guess == secretNumber {
+                message = "Correct! \(secretNumber) is my number!"
+                messageSymbol = "checkmark.circle.fill"
+                messageColor = Color.green
+                gameIsOver = true
+            } else if guess < secretNumber {
+                message = "\(guess) is too low! Try a higher number."
+                messageSymbol = "arrow.up.circle.fill"
+                messageColor = Color.orange
+            } else {
+                message = "\(guess) is too high! Try a lower number."
+                messageSymbol = "arrow.down.circle.fill"
+                messageColor = Color.red
+            }
     }
 
     // Makes the guess 10 smaller, but never smaller than the lowest number.
