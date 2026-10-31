@@ -3,212 +3,216 @@
 //  GuessingGame
 //
 //  WHAT THIS GAME DOES NOW
-//  The app picks a secret whole number from 1 to 100.
-//  You choose a guess with the buttons and click Guess.
-//  NEW FOR MAKE IT YOURS
-//  Wrong guesses now tell the player to go higher or lower.
-//  The app tells you if your guess is right or not right,
-//  and it counts your guesses. When you find the number,
-//  you can play again.
-//
-//  WHAT IT DOES NOT DO YET
-//  It does not tell you if your guess is too high or too low.
-//  That part is up to you.
+//  The app picks a random secret whole number from 1 to 100.
+//  You choose a guess using the number buttons and click Guess.
+//  Wrong guesses tell the player to go higher or lower.
+//  The game counts guesses and shows a message, icon, and colour.
+//  The game also shows if the secret number is even or odd.
+//  It remembers the player's best score.
+//  It prevents players from guessing the same number twice.
+//  You can play again after finding the number.
 //
 
 import SwiftUI
 
-// The game's settings. They sit up here, outside the game,
-// so that every part of the game below can use them.
-// TRY: Change highestNumber to 10 for an easy game, or to 1000 for a hard one.
-let lowestNumber: Int = 1
-let highestNumber: Int = 100
-
-// The game itself: what it remembers, what it shows on the screen,
-// and what it does when you click a button.
 struct GuessingGameView: View {
 
-    // MARK: - Stored properties
+    let lowestNumber: Int = 1
+    let highestNumber: Int = 100
 
-    // Each @State variable is something the game remembers.
-    // When one of them changes, the screen updates by itself.
-
-    // The number the player is trying to find. The app picks it at random.
-    @State var secretNumber: Int = Int.random(in: lowestNumber...highestNumber)
-
-    // The guess the player is about to make. It starts in the middle.
-    @State var guess: Int = (lowestNumber + highestNumber) / 2
-
-    // How many guesses the player has made in this game.
+    @State var secretNumber: Int = Int.random(in: 1...100)
+    @State var guess: Int = 50
     @State var guessCount: Int = 0
+    @State var bestScore: Int = 0
+    @State var lastGuess: Int = 0
 
-    // The message shown to the player, with a symbol and a colour to match it.
-    @State var message: String = "I'm thinking of a number from \(lowestNumber) to \(highestNumber)."
+    @State var message: String = "Make your first guess!"
     @State var messageSymbol: String = "questionmark.circle.fill"
-    @State var messageColor: Color = Color.indigo
-
-    // Becomes true when the player finds the secret number.
+    @State var messageColor: Color = .blue
     @State var gameIsOver: Bool = false
-
-    // MARK: - Computed properties
 
     var body: some View {
         VStack(spacing: 20) {
 
-            // The title at the top of the screen.
-            HStack {
-                Image(systemName: "dice.fill")
-                Text("Guessing Game")
-            }
-            .font(.largeTitle)
-            .bold()
-            .foregroundStyle(Color.indigo)
-            // Shrink the title a little if it does not fit on one line.
-            .lineLimit(1)
-            .minimumScaleFactor(0.5)
+            Text("Guessing Game")
+                .font(.largeTitle)
+                .fontWeight(.bold)
 
-            Spacer()
+            Text("Guess the secret number between 1 and 100!")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
 
-            // The message card: what the game has to say to you.
-            VStack(spacing: 12) {
+            VStack(spacing: 10) {
                 Image(systemName: messageSymbol)
-                    .font(.system(size: 60))
-                    .foregroundStyle(messageColor)
+                    .font(.system(size: 35))
+                    .foregroundColor(messageColor)
+
                 Text(message)
-                    .font(.title2)
+                    .font(.headline)
                     .multilineTextAlignment(.center)
+                    .foregroundColor(messageColor)
             }
+            .frame(maxWidth: .infinity)
             .padding()
-            .frame(maxWidth: .infinity, minHeight: 180)
-            .background(messageColor.opacity(0.15))
-            .clipShape(RoundedRectangle(cornerRadius: 24))
 
-            Spacer()
+            Text("YOUR GUESS")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.secondary)
 
-            // The guess you are about to make, shown nice and big.
-            // TRY: Change the size of this number from 96 to something else.
             Text("\(guess)")
-                .font(.system(size: 96, weight: .bold))
-                .monospacedDigit()
+                .font(.system(size: 55))
+                .fontWeight(.bold)
 
-            // Four buttons to change the guess.
-            // The code inside the braces runs when that button is clicked.
-            HStack(spacing: 8) {
+            HStack(spacing: 12) {
                 Button("-10") {
-                    lowerGuessByTen()
+                    decreaseGuessByTen()
                 }
+
                 Button("-1") {
-                    lowerGuessByOne()
+                    decreaseGuessByOne()
                 }
+
                 Button("+1") {
-                    raiseGuessByOne()
+                    increaseGuessByOne()
                 }
+
                 Button("+10") {
-                    raiseGuessByTen()
+                    increaseGuessByTen()
                 }
             }
             .buttonStyle(.bordered)
-            .font(.title3)
-            .bold()
-            .monospacedDigit()
             .disabled(gameIsOver)
 
-            // Show the Guess button while the game is on,
-            // and the Play Again button once the number is found.
-            if gameIsOver {
-                Button("Play Again", systemImage: "arrow.clockwise") {
-                    startNewGame()
+            VStack(spacing: 8) {
+                Text("SECRET NUMBER TYPE")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                Text(getNumberType(number: secretNumber))
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("BEST SCORE")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+
+                if bestScore == 0 {
+                    Text("No record yet")
+                        .font(.title3)
+                        .fontWeight(.bold)
+                } else {
+                    Text("\(bestScore) guesses")
+                        .font(.title2)
+                        .fontWeight(.bold)
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(Color.green)
-            } else {
-                Button("Guess", systemImage: "hand.point.up.left.fill") {
+            }
+            .padding()
+
+            Button(gameIsOver ? "Play Again" : "Guess") {
+                if gameIsOver {
+                    startNewGame()
+                } else {
                     checkGuess()
                 }
-                .buttonStyle(.borderedProminent)
             }
+            .font(.title2)
+            .fontWeight(.bold)
+            .buttonStyle(.borderedProminent)
+            .frame(maxWidth: .infinity)
 
-            HStack {
-                Image(systemName: "dice.fill")
-                Text("Guesses so far: \(guessCount)")
-            }
-            .font(.headline)
-            .foregroundStyle(Color.secondary)
+            Text("Guesses: \(guessCount)")
+                .font(.headline)
+                .foregroundColor(.secondary)
+
         }
-        .padding(32)
-        .font(.title2)
-        .fontDesign(.rounded)
-        .controlSize(.large)
-        // TRY: Change indigo to another colour, such as teal, pink or orange.
-        .tint(Color.indigo)
-        // How big the game's window is on the Mac. It can be made taller or wider.
-        .frame(minWidth: 420, minHeight: 640)
+        .padding()
+        .frame(minWidth: 550, minHeight: 760)
     }
 
-    // MARK: - Functions
-
-    // Checks the player's guess against the secret number.
     func checkGuess() {
 
-        // One more guess has been made.
+        if guess == lastGuess {
+            message = "You already guessed this number! Try a different number."
+            messageSymbol = "exclamationmark.triangle.fill"
+            messageColor = .orange
+            return
+        }
+
+        lastGuess = guess
         guessCount += 1
 
-            if guess == secretNumber {
-                message = "Correct! \(secretNumber) is my number!"
-                messageSymbol = "checkmark.circle.fill"
-                messageColor = Color.green
-                gameIsOver = true
-            } else if guess < secretNumber {
-                message = "\(guess) is too low! Try a higher number."
-                messageSymbol = "arrow.up.circle.fill"
-                messageColor = Color.orange
-            } else {
-                message = "\(guess) is too high! Try a lower number."
-                messageSymbol = "arrow.down.circle.fill"
-                messageColor = Color.red
+        if guess == secretNumber {
+
+            message = "Correct! You found the secret number!"
+            messageSymbol = "checkmark.circle.fill"
+            messageColor = .green
+            gameIsOver = true
+
+            if bestScore == 0 || guessCount < bestScore {
+                bestScore = guessCount
             }
+
+        } else if guess < secretNumber {
+
+            message = "Too Low! Try a higher number."
+            messageSymbol = "arrow.up.circle.fill"
+            messageColor = .blue
+
+        } else {
+
+            message = "Too High! Try a lower number."
+            messageSymbol = "arrow.down.circle.fill"
+            messageColor = .red
+        }
     }
 
-    // Makes the guess 10 smaller, but never smaller than the lowest number.
-    func lowerGuessByTen() {
-        guess -= 10
-        if guess < lowestNumber {
+    func getNumberType(number: Int) -> String {
+        if number % 2 == 0 {
+            return "Even"
+        } else {
+            return "Odd"
+        }
+    }
+
+    func decreaseGuessByTen() {
+        if guess - 10 >= lowestNumber {
+            guess -= 10
+        } else {
             guess = lowestNumber
         }
     }
 
-    // Makes the guess 1 smaller, but never smaller than the lowest number.
-    func lowerGuessByOne() {
-        guess -= 1
-        if guess < lowestNumber {
-            guess = lowestNumber
+    func decreaseGuessByOne() {
+        if guess > lowestNumber {
+            guess -= 1
         }
     }
 
-    // Makes the guess 1 bigger, but never bigger than the highest number.
-    func raiseGuessByOne() {
-        guess += 1
-        if guess > highestNumber {
+    func increaseGuessByOne() {
+        if guess < highestNumber {
+            guess += 1
+        }
+    }
+
+    func increaseGuessByTen() {
+        if guess + 10 <= highestNumber {
+            guess += 10
+        } else {
             guess = highestNumber
         }
     }
 
-    // Makes the guess 10 bigger, but never bigger than the highest number.
-    func raiseGuessByTen() {
-        guess += 10
-        if guess > highestNumber {
-            guess = highestNumber
-        }
-    }
-
-    // Picks a new secret number and resets everything else.
     func startNewGame() {
         secretNumber = Int.random(in: lowestNumber...highestNumber)
-        guess = (lowestNumber + highestNumber) / 2
+        guess = 50
         guessCount = 0
-        message = "I'm thinking of a new number from \(lowestNumber) to \(highestNumber)."
+        lastGuess = 0
+        message = "Make your first guess!"
         messageSymbol = "questionmark.circle.fill"
-        messageColor = Color.indigo
+        messageColor = .blue
         gameIsOver = false
     }
 }
